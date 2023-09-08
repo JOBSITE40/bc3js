@@ -1,12 +1,12 @@
 const { getDate } = require('./Utils')
 
 class Propiedad {
-  constructor(pa, ca) {
-    this._propiedadArchivo = pa
-    this._versionFormato = 'FIEBDC-3/2016'
-    this._ddmmaaaa = getDate()
-    this._programaEmision = 'BC3js'
-    this._cabecera = ca
+  constructor(propiedadArchivo, versionFormato, fecha, programaEmision, cabecera) {
+    this._propiedadArchivo = propiedadArchivo
+    this._versionFormato = versionFormato
+    this._ddmmaaaa = fecha
+    this._programaEmision = programaEmision
+    this._cabecera = cabecera
   }
 }
 

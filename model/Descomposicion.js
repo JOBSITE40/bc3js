@@ -1,8 +1,8 @@
 class Descomposicion {
-    constructor(codigoHijo) {
+    constructor(codigoHijo, factor, rendimiento) {
         this._codigoHijo = codigoHijo
-        this._factor = 1
-        this._rendimiento = 1
+        this._factor = factor
+        this._rendimiento = rendimiento
     }
 }
 
