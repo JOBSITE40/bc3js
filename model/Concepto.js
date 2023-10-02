@@ -1,37 +1,41 @@
-const { getDate } = require('./Utils')
-const { Descomposicion } = require('./Descomposicion')
+const { Descomposicion } = require('./Descomposicion');
 
 class Concepto {
-    constructor(codigo, isRaiz, isCapitulo, unidad, resumen, precio) {
-        this._codigo = codigo
-        this._isRaiz = isRaiz
-        this._isCapitulo = isCapitulo
-        this._unidad = unidad
-        this._resumen = resumen
-        this._precio = precio
-        this._fecha = getDate()
-        this._descomposiciones = []
+    constructor(parameters) {
+        // Enumeración de tipos válidos en minúsculas
+        const ValidTypes = {
+            raiz: 'raiz',
+            capitulo: 'capitulo',
+            partida: 'partida',
+            descompuestopartida: 'descompuestopartida'
+        };
+
+        const typeLower = parameters.type.toLowerCase(); // Convertir a minúsculas
+
+        if (!ValidTypes[typeLower]) {
+            throw new Error(`El tipo '${parameters.type}' no es válido.`);
+        }
+
+        this._type = typeLower; // Almacenar en minúsculas
+        this._codigo = parameters.codigo;
+        this._unidad = parameters.unidad;
+        this._resumen = parameters.resumen;
+        this._precio = parameters.precio;
+        this._fecha = parameters.fecha;
+        this._tipo = parameters.tipo;
+        this._texto = null;
+        this._descomposiciones = [];
     }
+
+    // ... (métodos restantes)
 
     addDescomposicion(codigoHijo) {
-        var descomposicion = new Descomposicion(codigoHijo)
-        this._descomposiciones.push(descomposicion)
+        var descomposicion = new Descomposicion(codigoHijo);
+        this._descomposiciones.push(descomposicion);
     }
 
-    writeDescomposiciones() {
-        let list = `~D|${this._codigo}|`
-        this._descomposiciones.forEach(desc => {
-            const text = this._writeDescomposicion(desc)
-            list += text
-        })
-        list += '|'
-        return list
-    }
-
-    _writeDescomposicion(d) {
-        let text = `${d._codigoHijo}\\${d._factor}\\${d._rendimiento}\\`
-        return text
-    }
+    // ... (métodos restantes)
 }
 
-module.exports = { Concepto }
+module.exports = { Concepto };
+

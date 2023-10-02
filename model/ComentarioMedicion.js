@@ -1,11 +1,11 @@
 class ComentarioMedicion {
-  constructor(comentario, unidades, longitud, latitud, altura) {
-      this._tipo = null
-      this._comentario = comentario
-      this._unidades = unidades
-      this._longitud = longitud
-      this._latitud = latitud
-      this._altura = altura
+  constructor(parameters) {
+    this._tipo = parameters.tipo
+    this._comentario = parameters.comentario
+    this._unidades = parameters.unidades
+    this._longitud = parameters.longitud
+    this._latitud = parameters.latitud
+    this._altura = parameters.altura
   }
 }
 

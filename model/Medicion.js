@@ -1,10 +1,11 @@
 class Medicion {
-  constructor(codigoPadre, codigoHijo, posicion, medicionTotal, lineas) {
-    this._codigoPadre = codigoPadre
-    this._codigoHijo = codigoHijo
-    this._posicion = posicion
-    this._medicionTotal = medicionTotal
-    this._lineas = lineas
+  constructor(parameters) {
+    this._codigoPadre = parameters.padre
+    this._codigoHijo = parameters.hijo
+    this._posicion = parameters.posicion
+    this._medicionTotal = parameters.cantidadTotal
+    this._comentarios = parameters.lista
+    this._etiqueta = null
   }
 }
 

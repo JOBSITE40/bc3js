@@ -2,13 +2,16 @@
   "name": "bc3js",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node index"
+    "start": "node server.js",
+    "server": "nodemon start"
   },
   "author": "Adrian Used Vivas",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.18.2"
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1"
   }
 }
