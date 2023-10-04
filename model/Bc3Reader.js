@@ -105,7 +105,7 @@ class Bc3Reader {
           // isPartida: d[6] == 0 && !n ? true : false,
           // isDescompuestoPartida: d[6] != 0 && !n ? true : false,
           type: n === 2 ? 'raiz' : n === 1 ? 'capitulo' : d[6] == 0 && !n ? 'partida' : 'descompuestopartida',
-          codigo: d[1].replace('#', ''),
+          codigo: d[1],
           unidad: d[2],
           resumen: d[3],
           precio: d[4],
@@ -126,7 +126,7 @@ class Bc3Reader {
         const d = item.split('|')
         const e = d[2].split(`\\`)
         const padre = this.#conceptos.find(
-          (x) => x._codigo === d[1].replace('#', '')
+          (x) => x._codigo === d[1]
         )
         if (padre === undefined) {
           console.log('no se encuentra el concepto')
@@ -134,13 +134,18 @@ class Bc3Reader {
           let hijos = []
           for (let i = 0; i < e.length; i = i + 3) {
             const hijo = e[i]
+            const codigoHijo = this.#conceptos.find(
+              (x) => x._codigo.replace('#', '') === hijo
+            )
             if (hijo !== undefined && hijo !== '') {
               const factor = e[i + 1]
               const rendimiento = e[i + 2]
               let descHijo = new DescomposicionHijo({
-                type: padre._type == 'raiz' ? 'capitulo' : padre._type == 'capitulo' ?
-                  // cuando el padre es capitulo tenemos que comprobar si el hijo tambien es capitulo o es partida viendo si el codigo tiene o no # si tiene es capitulo si no es hijo
-                  d[1].includes('#') ? 'capitulo' : 'partida' : padre._type == 'partida' && 'descompuestopartida',
+                type: (padre._type === 'raiz') ? 'capitulo' :
+                  (padre._type === 'capitulo' && codigoHijo._codigo.includes('#')) ? 'capitulo' :
+                    (padre._type === 'capitulo') ? 'partida' :
+                      (padre._type === 'partida') ? 'descompuestopartida' : undefined,
+
                 hijo: hijo,
                 factor: factor,
                 rendimiento: rendimiento
@@ -167,7 +172,7 @@ class Bc3Reader {
       textos.forEach((texto) => {
         const d = texto.split('|')
         const concepto = this.#conceptos.find(
-          (x) => x._codigo === d[1].replace('#', '')
+          (x) => x._codigo === d[1]
         )
         if (concepto === undefined) {
           console.log('no se encuentra el concepto')
@@ -185,9 +190,9 @@ class Bc3Reader {
       mediciones.forEach((item) => {
         const d = item.split('|')
         const rel = d[1].split('\\')
-        const padre = rel[0].replace('#', '')
+        const padre = rel[0]
         const codigoHijo = rel[1]
-        const hijo = this.#descomposiciones.find((x) => x._codigoPadre === padre && x._hijos.flat().find(h => h._codigoHijo === codigoHijo));
+        const hijo = this.#descomposiciones.find((x) => x._codigoPadre.replace('#', '') === padre && x._hijos.flat().find(h => h._codigoHijo === codigoHijo));
 
         const posicion = d[2].split('\\')[0]
         const cantidadTotal = d[3]
@@ -257,9 +262,6 @@ class Bc3Reader {
       };
 
       fs.unlinkSync(this.#path)
-
-      // console.log('VEAMOS EL JSONDATA: ', JSONData)
-
       return JSONData
 
     } catch (err) {
