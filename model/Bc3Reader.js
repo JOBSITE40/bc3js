@@ -16,52 +16,56 @@ class Bc3Reader {
   #descomposiciones = []
   #mediciones = []
   #data = null
+  #file = null
+  #path = null
 
   constructor(file, path = null) {
-    this.file = file
-    this.path = path
+    this.#file = file
+    this.#path = path
   }
 
-  async #createFile() {
+
+  async readBc3() {
+    if (!this.#file) {
+      throw new Error('No file provided');
+    }
+
+    const uploadDir = path.join(__dirname, '../uploads');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir);
+    }
+
+    const timestamp = Date.now();
+    const randomValue = Math.floor(Math.random() * 10000);
+    const fileName = `${timestamp}_${randomValue}.bc3`;
+    this.#path = path.join(uploadDir, fileName);
+
+    const fileStream = fs.createWriteStream(this.#path);
+
+    const fileData = JSON.stringify(this.#file);
+    const data = Buffer.from(fileData);
+
+    fileStream.write(data);
+    fileStream.end();
+
+    // Devolver una promesa que resuelva con el resultado de this.#readFile() cuando se complete la escritura.
     return new Promise((resolve, reject) => {
-      // tengo que coger el file que viene del constructor, crear una carpeta temporal en dicho servidor y guardar el archivo en dicha carpeta
-      if (!this.file) {
-        reject(new Error('No file provided'))
-        return;
-      }
-
-      const uploadDir = path.join(__dirname, '../uploads')
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir)
-      }
-
-      const timestamp = Date.now(); // Obtiene la marca de tiempo actual en milisegundos
-      const randomValue = Math.floor(Math.random() * 10000);
-
-      const fileName = `${timestamp}_${randomValue}.bc3`;
-      this.path = path.join(uploadDir, fileName)
-
-      const fileStream = fs.createWriteStream(path.join(uploadDir, fileName))
-
-      const fileData = JSON.stringify(this.file)
-
-      const data = Buffer.from(fileData)
-
-
-      fileStream.write(data)
-
-      fileStream.on('finish', () => {
-        resolve(fileName)
-      })
+      fileStream.on('finish', async () => {
+        try {
+          const result = await this.#readFile();
+          resolve(result);
+        } catch (error) {
+          reject(error);
+        }
+      });
 
       fileStream.on('error', (error) => {
-        reject(error)
-      })
-
-      resolve()
-    })
-
+        console.log('ERROR AL SUBIR EL ARCHIVO A LA CARPETA UPLOADS: ', error);
+        reject(error);
+      });
+    });
   }
+
   async #getPropiedad() {
     return new Promise((resolve, reject) => {
       const item = this.#data.find((x) => x.startsWith('~V'))
@@ -134,7 +138,9 @@ class Bc3Reader {
               const factor = e[i + 1]
               const rendimiento = e[i + 2]
               let descHijo = new DescomposicionHijo({
-                type: padre._type == 'raiz' ? 'capitulo' : padre._type == 'capitulo' ? 'partida' : padre._type == 'partida' && 'descompuestopartida',
+                type: padre._type == 'raiz' ? 'capitulo' : padre._type == 'capitulo' ?
+                  // cuando el padre es capitulo tenemos que comprobar si el hijo tambien es capitulo o es partida viendo si el codigo tiene o no # si tiene es capitulo si no es hijo
+                  d[1].includes('#') ? 'capitulo' : 'partida' : padre._type == 'partida' && 'descompuestopartida',
                 hijo: hijo,
                 factor: factor,
                 rendimiento: rendimiento
@@ -147,7 +153,7 @@ class Bc3Reader {
 
           let desc = new Descomposicion(padre._codigo, hijos)
           this.#descomposiciones.push(desc)
-          padre._descomposiciones.push(desc)
+          padre._descomposicion = desc
         }
       })
       resolve()
@@ -178,16 +184,10 @@ class Bc3Reader {
       const mediciones = this.#data.filter((x) => x.startsWith('~M'))
       mediciones.forEach((item) => {
         const d = item.split('|')
-        console.log('VEAMOS EL ITEM: ', item)
         const rel = d[1].split('\\')
         const padre = rel[0].replace('#', '')
         const codigoHijo = rel[1]
         const hijo = this.#descomposiciones.find((x) => x._codigoPadre === padre && x._hijos.flat().find(h => h._codigoHijo === codigoHijo));
-        console.log('descomposiciones', {
-          hijo: hijo,
-          codigoHijo: codigoHijo,
-          padre: padre
-        })
 
         const posicion = d[2].split('\\')[0]
         const cantidadTotal = d[3]
@@ -224,55 +224,55 @@ class Bc3Reader {
   }
 
 
-  async readFile() {
-    await this.#createFile()
-    return new Promise((resolve, reject) => {
-      fs.readFile(this.path, 'ascii', (err, data) => {
-        if (err) {
-          console.log(err)
-          reject()
-        }
+  async #readFile() {
+
+    try {
+      const reader = fs.readFileSync(this.#path, 'ascii');
+
+      if (!this.#path.endsWith('.bc3')) {
+        console.log('El archivo no es un archivo bc3');
+        reject(new Error('El archivo no es un archivo bc3'));
+        return;
+      }
+
+      const newData = reader.slice(2, -2)
+      const newDataModified = newData.replace(/\\\\/g, '\\');
+      this.#data = newDataModified.split(/\\r?\\n/)
 
 
-        // TODO: lo primero que hay que hace es comprobar si es una archivo bc3 valido
-        // para ello comprobamos que la primera linea empieza por ~V y que su extension es bc3
-        if (!this.path.endsWith('.bc3')) {
-          console.log('El archivo no es un archivo bc3')
-          reject()
-        }
+      await this.#getPropiedad();
+      await this.#getCoeficiente();
+      await this.#getConceptos();
+      await this.#getDescomposiciones();
+      await this.#getTexto();
+      await this.#getMediciones();
 
-        const newData = data.slice(2, -2)
-        const newDataModified = newData.replace(/\\\\/g, '\\');
-        this.#data = newDataModified.split(/\\r?\\n/)
-        // ahora ejecutamos las funciones que leen cada seccion del archivo bc3
-        this.#getPropiedad()
-        this.#getCoeficiente()
-        this.#getConceptos()
-        this.#getDescomposiciones()
-        this.#getTexto()
-        this.#getMediciones()
 
-        // ahora tenemos que construir un JSON con toda la informacion (meter todo en un JSON)
-        const JSONData = {
-          propiedad: this.#propiedad,
-          coeficiente: this.#coeficiente,
-          conceptos: this.#conceptos,
-          descomposiciones: this.#descomposiciones,
-          mediciones: this.#mediciones
-        }
+      const JSONData = {
+        propiedad: this.#propiedad,
+        coeficiente: this.#coeficiente,
+        conceptos: this.#conceptos,
+        descomposiciones: this.#descomposiciones,
+        mediciones: this.#mediciones
+      };
 
-        // ahora borramos el archivo bc3
-        fs.unlink(this.path, (err) => {
-          if (err) {
-            console.log('Error al borrar el archvi bc3 del server: ', err)
-            reject()
-          }
-        })
+      fs.unlinkSync(this.#path)
 
-        resolve(JSONData)
-      })
-      // resolve()
-    })
+      // console.log('VEAMOS EL JSONDATA: ', JSONData)
+
+      return JSONData
+
+    } catch (err) {
+      console.log('error al crear el archivo', err);
+    }
+
+
+
+
+
+
+
+
   }
 }
 

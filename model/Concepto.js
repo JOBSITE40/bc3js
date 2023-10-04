@@ -24,15 +24,15 @@ class Concepto {
         this._fecha = parameters.fecha;
         this._tipo = parameters.tipo;
         this._texto = null;
-        this._descomposiciones = [];
+        this._descomposicion = null;
     }
 
     // ... (métodos restantes)
 
-    addDescomposicion(codigoHijo) {
-        var descomposicion = new Descomposicion(codigoHijo);
-        this._descomposiciones.push(descomposicion);
-    }
+    // addDescomposicion(codigoHijo) {
+    //     var descomposicion = new Descomposicion(codigoHijo);
+    //     this._descomposiciones.push(descomposicion);
+    // }
 
     // ... (métodos restantes)
 }
