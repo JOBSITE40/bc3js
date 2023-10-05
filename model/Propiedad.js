@@ -1,5 +1,3 @@
-const { getDate } = require('./Utils')
-
 class Propiedad {
   constructor(propiedadArchivo, versionFormato_fecha, programaEmision, cabecera_rotuloIdentificacion, juegoCaracteres, comentario, tipoInformacion, numeroCertificacion, fechaCertificacion, urlBase) {
     this._propiedadArchivo = propiedadArchivo

@@ -27,14 +27,6 @@ class Concepto {
         this._descomposicion = null;
     }
 
-    // ... (métodos restantes)
-
-    // addDescomposicion(codigoHijo) {
-    //     var descomposicion = new Descomposicion(codigoHijo);
-    //     this._descomposiciones.push(descomposicion);
-    // }
-
-    // ... (métodos restantes)
 }
 
 module.exports = { Concepto };
